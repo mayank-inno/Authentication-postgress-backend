@@ -15,7 +15,7 @@ const server = express();
 server.use(express.json());
 server.use(cookieParser());
 server.use(cors({
-    origin:["http://localhost:3000"],
+    origin:["http://localhost:3000", "https://authentication-postgress-backend-au.vercel.app"],
     credentials:true,
 }));  
 
