@@ -229,10 +229,10 @@ export const login = async (req, res) => {
                         expiresIn: "7d",
                     })
                     res.cookie("token", token, {
-                        httpOnly: false,
+                        httpOnly: true,
                         secure: process.env.Environment == "production",
                         maxAge: 7 * 24 * 60 * 60 * 1000,
-                        sameSite: "Lax",
+                        sameSite: "none",
                     })
                     return res.status(200).json({
                         success: true,
