@@ -12,7 +12,7 @@ const User = sequelize.define("User", {
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true,
     },
     resetPasswordOTP: {
         type: DataTypes.STRING(6),

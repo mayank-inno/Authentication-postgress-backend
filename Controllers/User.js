@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import { sendEmail } from "../Config/email.js";
+import { OAuth2Client } from "google-auth-library";
 
 // regex for testing
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -248,5 +249,50 @@ export const login = async (req, res) => {
                 }
             }
         }
+    }
+}
+
+export const googleLogin = async (req, res) => {
+    try {
+        const { credential } = req.body;
+        if (!credential) {
+            return res.status(400).json({
+                success: false,
+                message: "Credentials cant be empty"
+            })
+        }
+        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const email = payload.email;
+
+        let user = await User.findOne({ where: { email } });
+        if (!user) {
+            user = await User.create({
+                email: email,
+                password: null,
+            });
+        }
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+            expiresIn: "7d",
+        })
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.Environment == "production",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            sameSite: "lax",
+        })
+        return res.status(200).json({
+            success: true,
+            message: "Login Successfull"
+        })
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({ success: false, message: "Google Login Error" });
     }
 }
